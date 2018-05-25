@@ -15,12 +15,13 @@ function IsJsonString(str) {
     return true;
 }
 
-function changePaylod(data) {
+function changePaylod(data, message) {
     var overrideMessagePayload = {
         body: JSON.stringify({
-            "textmessage": data.message,
-            "accountNumber": data.context.session.BotUserSession.lastMessage.messagePayload.accountNumber,
-            "transactionId": data.context.session.BotUserSession.lastMessage.messagePayload.transactionId
+            "textmessage": message,
+            "accountnumber": data.context.session.BotUserSession.AccountNumber,
+            "partner": data.context.session.BotUserSession.PartnerName,
+            "transactionId": data.context.session.BotUserSession.TransactionId
         }),
         isTemplate: true
     };
@@ -32,15 +33,23 @@ module.exports = {
     botName: botName,
 
     on_user_message: function (requestId, data, callback) {
+        console.log(JSON.stringify(data));
         sdk.sendBotMessage(data, callback);
     },
     on_bot_message: function (requestId, data, callback) {
+        console.info(JSON.stringify(data));
         if (data._originalPayload.channel.type == "ivr") {
             if (IsJsonString(data.message)) {
-                console.info("It's object type" + JSON.parse(data.message).textmessage);
+                var mesObj = JSON.parse(data.message);
+                if ("isTemplate" in mesObj) {
+                    console.info("It is template type" + mesObj.text);
+                    data.overrideMessagePayload = changePaylod(data, mesObj.text);
+                } else {
+                    console.info("It is object type" + JSON.parse(data.message).textmessage);
+                }
             } else {
-                console.info("It's string type" + data._originalPayload.channel.message);
-                data.overrideMessagePayload = changePaylod(data);
+                console.info("It is string type" + data._originalPayload.channel.message);
+                data.overrideMessagePayload = changePaylod(data, data.message);
             }
         }
         sdk.sendUserMessage(data, callback);

@@ -10,13 +10,16 @@ function changePayload(req, res) {
     var options = {
         method: 'POST',
         url: config.connect.api,
-        form: data,
+        body: data,
+        json: true,
         headers: {
             'Content-Type': 'application/json',
         }
     };
+    console.log("options are ", options);
     request(options, function (error, response, body) {
         if (!error) {
+            console.log('CU response [' + response.statusCode + '] body:  ' + body);
             res.json({
                 "response": "okay"
             });
